@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+option csharp_namespace = "DietPlan";
+
+package diet;
+
+service Status {
+    rpc GetStatus (GetStatusRequest) returns (GetStatusResponse);
+}
+
+message GetStatusRequest {}
+
+message GetStatusResponse {
+    string status = 1;
+}
+
+message Diet {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    string description = 4;
+    repeated Food foods = 5;
+}
+
+message Food {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    int32 calories = 4;
+    int32 repetitions = 5;
+}
+
+service DietCrud {
+    rpc CreateDiet (CreateDietRequest) returns (CreateDietResponse);
+    rpc ReadDiet (ReadDietRequest) returns (ReadDietResponse);
+    rpc ReadAllDiets (ReadAllDietsRequest) returns (ReadAllDietsResponse);
+    rpc UpdateDiet (UpdateDietRequest) returns (UpdateDietResponse);
+    rpc DeleteDiet (DeleteDietRequest) returns (DeleteDietResponse);
+}
+
+message CreateDietRequest {
+    Diet diet = 1;
+}
+message CreateDietResponse {
+    Diet diet = 1;
+}
+
+message ReadDietRequest {
+    string diet_id = 1;
+}
+message ReadDietResponse {
+    Diet diet = 1;
+}
+
+message ReadAllDietsRequest {
+    string user_id = 1;
+}
+message ReadAllDietsResponse {
+    repeated Diet diets = 1;
+}
+
+message UpdateDietRequest {
+    Diet diet = 1;
+}
+message UpdateDietResponse {
+    Diet diet = 1;
+}
+
+message DeleteDietRequest {
+    string diet_id = 1;
+}
+message DeleteDietResponse {
+    string message = 1;
+}

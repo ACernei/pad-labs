@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+option csharp_namespace = "WorkoutPlan";
+
+package workout;
+
+service Status {
+    rpc GetStatus (GetStatusRequest) returns (GetStatusResponse);
+}
+
+message GetStatusRequest {}
+
+message GetStatusResponse {
+    string status = 1;
+}
+
+message Workout {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    string description = 4;
+    repeated Exercise exercises = 5;
+}
+
+message Exercise {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    int32 sets = 4;
+    int32 repetitions = 5;
+}
+
+service WorkoutCrud {
+    rpc CreateWorkout (CreateWorkoutRequest) returns (CreateWorkoutResponse);
+    rpc ReadWorkout (ReadWorkoutRequest) returns (ReadWorkoutResponse);
+    rpc ReadAllWorkouts (ReadAllWorkoutsRequest) returns (ReadAllWorkoutsResponse);
+    rpc UpdateWorkout (UpdateWorkoutRequest) returns (UpdateWorkoutResponse);
+    rpc DeleteWorkout (DeleteWorkoutRequest) returns (DeleteWorkoutResponse);
+}
+
+message CreateWorkoutRequest {
+    Workout workout = 1;
+}
+message CreateWorkoutResponse {
+    Workout workout = 1;
+}
+
+message ReadWorkoutRequest {
+    string workout_id = 1;
+}
+message ReadWorkoutResponse {
+    Workout workout = 1;
+}
+
+message ReadAllWorkoutsRequest {
+    string user_id = 1;
+}
+message ReadAllWorkoutsResponse {
+    repeated Workout workouts = 1;
+}
+
+message UpdateWorkoutRequest {
+    Workout workout = 1;
+}
+message UpdateWorkoutResponse {
+    Workout workout = 1;
+}
+
+message DeleteWorkoutRequest {
+    string workout_id = 1;
+}
+message DeleteWorkoutResponse {
+    string message = 1;
+}
