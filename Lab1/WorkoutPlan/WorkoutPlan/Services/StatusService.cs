@@ -4,11 +4,11 @@ namespace WorkoutPlan.Services;
 
 public class StatusService : Status.StatusBase
 {
-    private readonly ILogger<StatusService> _logger;
+    private readonly ILogger<StatusService> logger;
 
     public StatusService(ILogger<StatusService> logger)
     {
-        _logger = logger;
+        this.logger = logger;
     }
 
     public override Task<GetStatusResponse> GetStatus(GetStatusRequest request, ServerCallContext context)

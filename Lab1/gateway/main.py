@@ -1,121 +1,79 @@
-import logging
+from icecream import ic
+import cachetools
 
 import grpc
 import workout_pb2_grpc
 import workout_pb2
+import diet_pb2_grpc
+import diet_pb2
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+cache = cachetools.LRUCache(maxsize=100)
 
-def check_service_status():
+
+def check_workout_service_status():
+    cached_response = cache.get("workout_service_status_response")
+    ic(cache)
+
+    if cached_response:
+        return cached_response
+    
     try:
-        # Connect to the gRPC server
         channel = grpc.insecure_channel('localhost:5135')   
         stub = workout_pb2_grpc.StatusStub(channel)
 
-        # Create an empty request
-        request = workout_pb2.Empty()
+        request = workout_pb2.GetStatusRequest()
+        response = stub.GetStatus(request)
 
-        # Make the gRPC call to check the status
-        response = stub.CheckStatus(request)
+        cache["workout_service_status_response"] = response.status
 
         return response.status
 
-    except Exception as e:
-        return str(e)
+    except grpc.RpcError as e:
+            return e.details()
+
+
+def check_diet_service_status():
+    cached_response = cache.get("diet_service_status_response")
+    ic(cache)
+
+    if cached_response:
+        return cached_response
+
+    try:
+        channel = grpc.insecure_channel('localhost:5275')   
+        stub = diet_pb2_grpc.StatusStub(channel)
+
+        request = diet_pb2.GetStatusRequest()
+        response = stub.GetStatus(request)
+
+        cache["diet_service_status_response"] = response.status
+
+        return response.status
+
+    except grpc.RpcError as e:
+            return e.details()
+
 
 @app.route('/gateway_status', methods=['GET'])
 def get_gateway_status():
     return jsonify({"status": "Gateway is up and running"})
 
-# @app.route('/say_hello', methods=['GET'])
-# def say_hello():
-#     try:
-#         # Connect to the gRPC server
-#         channel = grpc.insecure_channel('localhost:5135')
-#         stub = workout_pb2_grpc.StatusStub(channel)
 
-#         # Extract data from the HTTP request
-#         name = 'Andrei'
+@app.route('/workout_status', methods=['GET'])
+def get_workout_status():
+    service_status = check_workout_service_status()
 
-#         # Make the gRPC call
-#         response = stub.SayHello(workout_pb2.HelloRequest(name=name), timeout=3)
-#         print(response)
-#         # Return the gRPC response as JSON
-#         return jsonify({"message": response.message})
+    return jsonify({"status": service_status})
 
-#     except Exception as e:
-#         return jsonify({"error": str(e)})
 
-@app.route('/status', methods=['GET'])
-def get_status():
-    try:
-        # Check the service status
-        service_status = check_service_status()
+@app.route('/diet_status', methods=['GET'])
+def get_diet_status():
+    service_status = check_diet_service_status()
 
-        # Return the service status as a JSON response
-        return jsonify({"status": service_status})
+    return jsonify({"status": service_status})
 
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-@app.route('/workout', methods=['POST'])
-def read_all_workouts_plan():
-    try:
-        # Connect to the gRPC server
-        channel = grpc.insecure_channel('localhost:5135')
-        stub = workout_pb2_grpc.WorkoutCrudStub(channel)
-
-        # Extract data from the HTTP request
-
-        # Create an Exercise
-        exercise = workout_pb2.Exercise(
-            name='Bicep Curls',
-            description='Bicep Curls description',
-            sets=3,
-            repetitions=12
-        )
-
-        # Create a Workout with the Exercise
-        workout = workout_pb2.Workout(
-            id='asd',
-            user_id='fgh',
-            name='Biceps',
-            description='Biceps description',
-            exercises=[exercise]
-        )
-
-        # Create a CreateWorkoutRequest and send it to the server
-        request = workout_pb2.CreateWorkoutRequest(workout=workout)
-        response = stub.CreateWorkout(request, timeout=100)
-        # Make the gRPC call
-        # response = stub.CreateWorkout(workout_pb2.CreateWorkoutRequest(id='asd', user_id = 'fgh', name = 'Biceps', description = 'Biceps description', exercises = [id = 'qw', na]), timeout=3)
-        print(response.name)
-        # Return the gRPC response as JSON
-        return jsonify({"message": response.message})
-
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-@app.route('/workouts', methods=['GET'])
-def read_all_workouts():
-    try:
-        # Connect to the gRPC server
-        channel = grpc.insecure_channel('localhost:5135')
-        stub = workout_pb2_grpc.WorkoutCrudStub(channel)
-
-        # Extract data from the HTTP request
-        user_id = '1'
-
-        # Make the gRPC call
-        response = stub.ReadAllWorkouts(workout_pb2.ReadAllWorkoutsRequest(user_id=user_id), timeout=3)
-        print(response)
-        # Return the gRPC response as JSON
-        return jsonify({"message": response.message})
-
-    except Exception as e:
-        return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
-    logging.basicConfig()
     app.run(port=8080)
