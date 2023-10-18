@@ -13,6 +13,6 @@ public class Diet
         UserId = other.UserId;
         Name = other.Name;
         Description = other.Description;
-        Foods = other.Foods;
+        // Foods = other.Foods;
     }
 }

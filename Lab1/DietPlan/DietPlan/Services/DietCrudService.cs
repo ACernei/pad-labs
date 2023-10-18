@@ -1,6 +1,7 @@
 using DietPlan.Data;
 using DietPlan.Mappers;
 using Grpc.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace DietPlan.Services;
 
@@ -30,7 +31,7 @@ public class DietCrudService : DietCrud.DietCrudBase
 
     public override async Task<ReadDietResponse> ReadDiet(ReadDietRequest request, ServerCallContext context)
     {
-        var diet = this.context.Diets.FirstOrDefault(x => x.Id == request.DietId);
+        var diet = this.context.Diets.Include(x => x.Foods).FirstOrDefault(x => x.Id == request.DietId);
         return new ReadDietResponse
         {
             Diet = Mapper.Map(diet),
@@ -39,7 +40,7 @@ public class DietCrudService : DietCrud.DietCrudBase
 
     public override async Task<ReadAllDietsResponse> ReadAllDiets(ReadAllDietsRequest request, ServerCallContext context)
     {
-        var diets = this.context.Diets.Where(x => x.UserId == request.UserId).ToList();
+        var diets = this.context.Diets.Include(x => x.Foods).Where(x => x.UserId == request.UserId).ToList();
 
         var response = new ReadAllDietsResponse();
         response.Diets.AddRange(diets.Select(Mapper.Map));
@@ -48,7 +49,7 @@ public class DietCrudService : DietCrud.DietCrudBase
 
     public override async Task<UpdateDietResponse> UpdateDiet(UpdateDietRequest request, ServerCallContext context)
     {
-        var existingDiet = this.context.Diets.FirstOrDefault(x => x.Id == request.Diet.Id);
+        var existingDiet = this.context.Diets.Include(x => x.Foods).FirstOrDefault(x => x.Id == request.Diet.Id);
         var diet = Mapper.Map(request.Diet);
         existingDiet.Update(diet);
 
@@ -61,6 +62,11 @@ public class DietCrudService : DietCrud.DietCrudBase
 
     public override async Task<DeleteDietResponse> DeleteDiet(DeleteDietRequest request, ServerCallContext context)
     {
+        var workout = this.context.Diets.Include(x => x.Foods).FirstOrDefault(x => x.Id == request.DietId);
+
+        this.context.Foods.RemoveRange(workout.Foods);
+        this.context.Remove(workout);
+
         var diet = this.context.Diets.FirstOrDefault(x => x.Id == request.DietId);
 
         // var diet = Mapper.Map(request.Diet);

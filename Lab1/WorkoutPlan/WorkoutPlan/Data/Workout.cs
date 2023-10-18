@@ -13,6 +13,6 @@ public class Workout
         UserId = other.UserId;
         Name = other.Name;
         Description = other.Description;
-        Exercises = other.Exercises;
+        // Exercises = other.Exercises;
     }
 }

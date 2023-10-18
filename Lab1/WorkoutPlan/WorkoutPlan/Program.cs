@@ -5,12 +5,6 @@ using WorkoutPlan.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.Limits.MaxConcurrentConnections = 1;
-    options.Limits.MaxConcurrentUpgradedConnections = 1;
-});
-
 builder.Services.AddGrpc();
 
 builder.Services.AddDbContext<WorkoutContext>(options =>
@@ -25,7 +19,6 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<WorkoutContext>();
     context.Database.EnsureCreated();
     context.Database.Migrate();
-    // DbInitializer.Initialize(context);
 }
 
 app.MapGrpcService<WorkoutCrudService>();
