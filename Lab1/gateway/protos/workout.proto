@@ -68,6 +68,7 @@ message UpdateWorkoutResponse {
 
 message DeleteWorkoutRequest {
     string workout_id = 1;
+    string user_id = 2;
 }
 message DeleteWorkoutResponse {
     string message = 1;

@@ -1,79 +1,61 @@
 from icecream import ic
-import cachetools
+
+from flask import Flask, jsonify, request
+import concurrent.futures
 
 import grpc
+from google.protobuf.json_format import MessageToJson
 import workout_pb2_grpc
 import workout_pb2
-import diet_pb2_grpc
-import diet_pb2
-from flask import Flask, jsonify, request
+
+from controllers.workout_controller import workout_controller
+from controllers.diet_controller import diet_controller
+
+
 
 app = Flask(__name__)
-cache = cachetools.LRUCache(maxsize=100)
 
+app.register_blueprint(workout_controller)
+app.register_blueprint(diet_controller)
 
-def check_workout_service_status():
-    cached_response = cache.get("workout_service_status_response")
-    ic(cache)
-
-    if cached_response:
-        return cached_response
-    
-    try:
-        channel = grpc.insecure_channel('localhost:5135')   
-        stub = workout_pb2_grpc.StatusStub(channel)
-
-        request = workout_pb2.GetStatusRequest()
-        response = stub.GetStatus(request)
-
-        cache["workout_service_status_response"] = response.status
-
-        return response.status
-
-    except grpc.RpcError as e:
-            return e.details()
-
-
-def check_diet_service_status():
-    cached_response = cache.get("diet_service_status_response")
-    ic(cache)
-
-    if cached_response:
-        return cached_response
-
-    try:
-        channel = grpc.insecure_channel('localhost:5275')   
-        stub = diet_pb2_grpc.StatusStub(channel)
-
-        request = diet_pb2.GetStatusRequest()
-        response = stub.GetStatus(request)
-
-        cache["diet_service_status_response"] = response.status
-
-        return response.status
-
-    except grpc.RpcError as e:
-            return e.details()
-
+MAX_CONCURRENT_TASKS = 5
+executor = concurrent.futures.ThreadPoolExecutor(MAX_CONCURRENT_TASKS)
 
 @app.route('/gateway_status', methods=['GET'])
 def get_gateway_status():
     return jsonify({"status": "Gateway is up and running"})
 
+# def get_workout_status_protected():
+#     with app.app_context():
 
-@app.route('/workout_status', methods=['GET'])
-def get_workout_status():
-    service_status = check_workout_service_status()
+#         try:
+#             channel = grpc.insecure_channel('localhost:5135')   
+#             stub = workout_pb2_grpc.StatusStub(channel)
 
-    return jsonify({"status": service_status})
+#             request = workout_pb2.GetStatusRequest()
+#             response = stub.GetStatus(request, timeout=6)
+            
+#             response = MessageToJson(response, preserving_proto_field_name=True)
+#             ic(response)
+
+#             # response = jsonify({"status": response.status})
+
+#             waiting_tasks = executor._work_queue.qsize()
+#             ic(waiting_tasks)
+
+#             # ic(response)
+#             return response
+#         except grpc.RpcError as e:
+#             ic(e)
+#             return e.details()
 
 
-@app.route('/diet_status', methods=['GET'])
-def get_diet_status():
-    service_status = check_diet_service_status()
+# @app.route('/workout_status', methods=['GET'])
+# def get_workout_status():
+#     future = executor.submit(get_workout_status_protected)
 
-    return jsonify({"status": service_status})
-
+#     return future.result()
 
 if __name__ == '__main__':
-    app.run(port=8080)
+
+    app.run(port=8080, threaded=True)
