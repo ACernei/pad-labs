@@ -3,22 +3,75 @@ from cachetools import TTLCache
 from flask import jsonify, request, Blueprint, current_app
 import concurrent.futures
 
+import os
+from os.path import join, dirname
+from dotenv import load_dotenv
+
 import grpc
 from google.protobuf.json_format import MessageToJson
 import workout_pb2_grpc
 import workout_pb2
+import registration_pb2_grpc
+import registration_pb2
+from google.protobuf import empty_pb2
 
+
+dotenv_path = join(dirname(__file__), '../.env')
+load_dotenv(dotenv_path)
 
 workout_controller = Blueprint('workout_controller', __name__)
-
-channel = grpc.insecure_channel('localhost:5135')
-status_stub = workout_pb2_grpc.StatusStub(channel)
-workout_crud_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
 
 cache = TTLCache(maxsize=1000, ttl=360)
 
 MAX_CONCURRENT_TASKS = 5
 executor = concurrent.futures.ThreadPoolExecutor(MAX_CONCURRENT_TASKS)
+
+
+
+discovery_channel = grpc.insecure_channel(f'localhost:{os.environ.get("SD_PORT")}')
+ic(os.environ.get("SD_PORT"))
+discovery_stub = registration_pb2_grpc.RegistrationServiceStub(discovery_channel)
+
+
+def list_registered_services():
+    request = empty_pb2.Empty()
+
+    response = discovery_stub.ListRegisteredServices(request)
+
+    return response.services
+
+
+def get_workout_stub():
+
+    services = list_registered_services()
+
+    services = [x for x in services if x.name == 'WorkoutPlan']
+
+    services.sort(key=lambda x:x.load)
+    ic(services)
+
+    if not services:
+        return None
+
+    channel = grpc.insecure_channel(f'localhost:{services[0].port}')
+    workout_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
+    return workout_stub
+
+def get_status_stub():
+    services = list_registered_services()
+
+    services = [x for x in services if x.name == 'WorkoutPlan']
+
+    services.sort(key=lambda x:x.load)
+    ic(services)
+
+    if not services:
+        return None
+    
+    channel = grpc.insecure_channel(f'localhost:{services[0].port}')
+    status_stub = workout_pb2_grpc.StatusStub(channel)
+    workout_crud_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
+    return status_stub
 
 
 def create_workout_object(data):
@@ -53,10 +106,13 @@ def cleanup_cache(data):
     
     return
 
+
 def get_workout_status_protected():
     try:
+        stub = get_status_stub()
+
         request = workout_pb2.GetStatusRequest()
-        response = status_stub.GetStatus(request, timeout=6)
+        response = stub.GetStatus(request, timeout=6)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
@@ -84,12 +140,14 @@ def post_workout():
     cleanup_cache(workout_data)
     
     ic(workout)
-
+    
     workout = create_workout_object(workout_data)
-
-    try:      
+ 
+    try:
+        stub = get_workout_stub()
+      
         w_request = workout_pb2.CreateWorkoutRequest(workout=workout)
-        response = workout_crud_stub.CreateWorkout(w_request)
+        response = stub.CreateWorkout(w_request)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
@@ -108,8 +166,10 @@ def get_workout_protected(workout_id):
         return cache_value
 
     try:
+        stub = get_workout_stub()
+
         request = workout_pb2.ReadWorkoutRequest(workout_id=workout_id)        
-        response = workout_crud_stub.ReadWorkout(request, timeout=6)
+        response = stub.ReadWorkout(request, timeout=6)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
@@ -141,8 +201,10 @@ def get_workouts_protected(user_id):
         return cache_value
 
     try:
+        stub = get_workout_stub()
+        ic(stub)
         request = workout_pb2.ReadAllWorkoutsRequest(user_id=user_id)        
-        response = workout_crud_stub.ReadAllWorkouts(request)
+        response = stub.ReadAllWorkouts(request)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
@@ -176,8 +238,10 @@ def put_workout_protected(workout_id):
     workout = create_workout_object(workout_data)
     
     try:
+        stub = get_workout_stub()
+
         w_request = workout_pb2.UpdateWorkoutRequest(workout=workout)
-        response = workout_crud_stub.UpdateWorkout(w_request)
+        response = stub.UpdateWorkout(w_request)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
     
@@ -201,7 +265,6 @@ def delete_workout_protected(workout_id):
     workout_data = request.get_json()
     user_id = workout_data['user_id']
 
-
     keys = [f"workouts_user_{user_id}", f'workout_{workout_id}']
 
     for key in keys:
@@ -211,8 +274,10 @@ def delete_workout_protected(workout_id):
     ic(cache)
 
     try:
+        stub = get_workout_stub()
+
         w_request = workout_pb2.DeleteWorkoutRequest(workout_id=workout_id)    
-        response = workout_crud_stub.DeleteWorkout(w_request, timeout=5)
+        response = stub.DeleteWorkout(w_request, timeout=5)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
         ic(response)

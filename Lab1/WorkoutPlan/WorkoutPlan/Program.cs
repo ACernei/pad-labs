@@ -1,11 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using WorkoutPlan;
 using WorkoutPlan.Data;
+using WorkoutPlan.Registration;
 using WorkoutPlan.Services;
+using RegistrationService = Registration.RegistrationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddGrpc();
+builder.Services
+    .AddGrpcClient<RegistrationService.RegistrationServiceClient>(o =>
+    {
+        o.Address = new Uri("http://localhost:50053");
+    })
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        var handler = new HttpClientHandler();
+        handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+        return handler;
+    });
+
+builder.Services.AddHostedService<Register>();
+builder.Services.AddHostedService<HeartBeater>();
+// builder.Services.AddHostedService<Deregister>();
 
 builder.Services.AddDbContext<WorkoutContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("WorkoutContext")));
