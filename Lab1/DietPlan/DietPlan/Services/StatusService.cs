@@ -11,11 +11,13 @@ public class StatusService : Status.StatusBase
         this.logger = logger;
     }
 
-    public override Task<GetStatusResponse> GetStatus(GetStatusRequest request, ServerCallContext context)
+    public override async Task<GetStatusResponse> GetStatus(GetStatusRequest request, ServerCallContext context)
     {
-        return Task.FromResult(new GetStatusResponse
+        await Task.Delay(3000);
+
+        return new GetStatusResponse
         {
             Status = "Service is up and running"
-        });
+        };
     }
 }

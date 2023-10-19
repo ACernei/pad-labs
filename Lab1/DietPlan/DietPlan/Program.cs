@@ -1,17 +1,31 @@
 using DietPlan.Data;
-using Microsoft.EntityFrameworkCore;
-using DietPlan;
+using DietPlan.Interceptors;
+using DietPlan.Registration;
 using DietPlan.Services;
+using Microsoft.EntityFrameworkCore;
+using RegistrationService = Registration.RegistrationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.ConfigureKestrel(options =>
+builder.Services.AddGrpc(options =>
 {
-    options.Limits.MaxConcurrentConnections = 1;
-    options.Limits.MaxConcurrentUpgradedConnections = 1;
+    options.Interceptors.Add<LoadInterceptor>();
 });
+builder.Services
+    .AddGrpcClient<RegistrationService.RegistrationServiceClient>(o =>
+    {
+        o.Address = new Uri(builder.Configuration.GetValue<string>("ServiceDiscoveryUrl"));
+    })
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        var handler = new HttpClientHandler();
+        handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+        return handler;
+    });
 
-builder.Services.AddGrpc();
+builder.Services.AddHostedService<Register>();
+builder.Services.AddHostedService<HeartBeater>();
+builder.Services.AddSingleton<LoadCounter>();
 
 builder.Services.AddDbContext<DietContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DietContext")));
@@ -22,10 +36,10 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    var context = services.GetRequiredService<DietContext>();
-    context.Database.EnsureCreated();
+    // var context = services.AddDbContext<ApplicationDbContext>(options =>
+    //         options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+   var context = services.GetRequiredService<DietContext>();
     context.Database.Migrate();
-    // DbInitializer.Initialize(context);
 }
 
 app.MapGrpcService<DietCrudService>();

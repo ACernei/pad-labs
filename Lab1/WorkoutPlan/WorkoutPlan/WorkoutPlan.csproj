@@ -14,7 +14,7 @@
 
     <ItemGroup>
         <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.12">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -31,7 +31,7 @@
 
     <ItemGroup>
       <None Include="bin\Debug\net7.0\Workout.db" />
-      <None Update="Workout.db">
+      <None Update="xWorkout.db">
         <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       </None>
       <None Remove="bin\**" />

@@ -1,26 +1,20 @@
-using Grpc.Net.Client;
 using Registration;
-using WorkoutPlan.Services;
-using RegistrationService = Registration.RegistrationService;
 
-namespace WorkoutPlan.Registration;
+namespace DietPlan.Registration;
 
-public sealed class HeartBeater : BackgroundService
+public sealed class Register : BackgroundService
 {
     private readonly RegistrationService.RegistrationServiceClient client;
     private readonly IConfiguration configuration;
-    private readonly LoadCounter counter;
-    private readonly ILogger<HeartBeater> logger;
+    private readonly ILogger<Register> logger;
 
-    public HeartBeater(
+    public Register(
         RegistrationService.RegistrationServiceClient client,
         IConfiguration configuration,
-        LoadCounter counter,
-        ILogger<HeartBeater> logger)
+        ILogger<Register> logger)
     {
         this.client = client;
         this.configuration = configuration;
-        this.counter = counter;
         this.logger = logger;
     }
 
@@ -35,7 +29,7 @@ public sealed class HeartBeater : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             //send heartbeat message
-            client.UpdateServiceHeartbeat(new Heartbeat { ServiceName = "WorkoutPlan", Port = port, Load = this.counter.GetLoad()});
+            client.RegisterService(new ServiceRegistration { Name = "DietPlan", Host = "0.0.0.0", Port = port });
             await Task.Delay(1000, stoppingToken);
         }
     }

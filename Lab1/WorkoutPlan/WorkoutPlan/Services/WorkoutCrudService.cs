@@ -39,7 +39,7 @@ public class WorkoutCrudService : WorkoutCrud.WorkoutCrudBase
     public override async Task<ReadWorkoutResponse> ReadWorkout(ReadWorkoutRequest request, ServerCallContext context)
     {
         var workout = this.context.Workouts.Include(x => x.Exercises).FirstOrDefault(x => x.Id == request.WorkoutId);
-        await Task.Delay(3000);
+        await Task.Delay(1000);
         return new ReadWorkoutResponse
         {
             Workout = Mapper.Map(workout),

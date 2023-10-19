@@ -1,17 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using WorkoutPlan;
 using WorkoutPlan.Data;
+using WorkoutPlan.Interceptors;
 using WorkoutPlan.Registration;
 using WorkoutPlan.Services;
 using RegistrationService = Registration.RegistrationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddGrpc();
+builder.Services.AddGrpc(options =>
+{
+    options.Interceptors.Add<LoadInterceptor>();
+});
 builder.Services
     .AddGrpcClient<RegistrationService.RegistrationServiceClient>(o =>
     {
-        o.Address = new Uri("http://localhost:50053");
+        o.Address = new Uri(builder.Configuration.GetValue<string>("ServiceDiscoveryUrl"));
     })
     .ConfigurePrimaryHttpMessageHandler(() =>
     {
@@ -22,7 +26,7 @@ builder.Services
 
 builder.Services.AddHostedService<Register>();
 builder.Services.AddHostedService<HeartBeater>();
-// builder.Services.AddHostedService<Deregister>();
+builder.Services.AddSingleton<LoadCounter>();
 
 builder.Services.AddDbContext<WorkoutContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("WorkoutContext")));
@@ -34,7 +38,6 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
 
     var context = services.GetRequiredService<WorkoutContext>();
-    context.Database.EnsureCreated();
     context.Database.Migrate();
 }
 

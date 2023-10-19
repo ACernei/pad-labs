@@ -26,10 +26,12 @@ cache = TTLCache(maxsize=1000, ttl=360)
 MAX_CONCURRENT_TASKS = 5
 executor = concurrent.futures.ThreadPoolExecutor(MAX_CONCURRENT_TASKS)
 
+ERROR_THRESHOLD = 3
+error_count = 0
+error_counts = {}
 
-
-discovery_channel = grpc.insecure_channel(f'localhost:{os.environ.get("SD_PORT")}')
-ic(os.environ.get("SD_PORT"))
+discovery_channel = grpc.insecure_channel(os.environ.get("SD_URL"))
+ic(os.environ.get("SD_URL"))
 discovery_stub = registration_pb2_grpc.RegistrationServiceStub(discovery_channel)
 
 
@@ -41,37 +43,25 @@ def list_registered_services():
     return response.services
 
 
-def get_workout_stub():
+def get_min_load_service():
 
     services = list_registered_services()
-
-    services = [x for x in services if x.name == 'WorkoutPlan']
-
-    services.sort(key=lambda x:x.load)
-    ic(services)
-
-    if not services:
-        return None
-
-    channel = grpc.insecure_channel(f'localhost:{services[0].port}')
-    workout_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
-    return workout_stub
-
-def get_status_stub():
-    services = list_registered_services()
-
-    services = [x for x in services if x.name == 'WorkoutPlan']
-
-    services.sort(key=lambda x:x.load)
-    ic(services)
-
-    if not services:
-        return None
+    if error_counts[f'{service.name}:{service.port}'] == ERROR_THRESHOLD:
+        services.remove()
     
-    channel = grpc.insecure_channel(f'localhost:{services[0].port}')
-    status_stub = workout_pb2_grpc.StatusStub(channel)
-    workout_crud_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
-    return status_stub
+    services = [x for x in services if x.name == 'WorkoutPlan' & error_counts[f'{service.name}:{service.port}'] != ERROR_THRESHOLD]
+    services.sort(key=lambda x:x.load)
+    ic(services)
+
+    if not services:
+        return None
+
+    return services[0]
+
+def handle_error(service):
+    error_count = +1
+    error_counts[f'{service.name}:{service.port}'] = error_count
+    ic(error_counts)
 
 
 def create_workout_object(data):
@@ -109,10 +99,12 @@ def cleanup_cache(data):
 
 def get_workout_status_protected():
     try:
-        stub = get_status_stub()
+        service = get_min_load_service()
+        channel = grpc.insecure_channel(f'localhost:{service.port}')
+        status_stub = workout_pb2_grpc.StatusStub(channel)
 
         request = workout_pb2.GetStatusRequest()
-        response = stub.GetStatus(request, timeout=6)
+        response = status_stub.GetStatus(request, timeout=6)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
@@ -122,6 +114,7 @@ def get_workout_status_protected():
         return response
     except grpc.RpcError as e:
         ic(e)
+
         return e.details()
 
 
@@ -132,30 +125,34 @@ def get_workout_status():
     return future.result()
 
 
-@workout_controller.route('/workout', methods=['POST'])
-def post_workout():
-    ic(cache)
+def post_workout_protected(data):
+    ic(data)
 
-    workout_data = request.get_json()
-    cleanup_cache(workout_data)
+    cleanup_cache(data)
     
+    workout = create_workout_object(data)
     ic(workout)
-    
-    workout = create_workout_object(workout_data)
- 
+
     try:
-        stub = get_workout_stub()
-      
-        w_request = workout_pb2.CreateWorkoutRequest(workout=workout)
-        response = stub.CreateWorkout(w_request)
+        service = get_min_load_service()
+        channel = grpc.insecure_channel(f'localhost:{service.port}')
+        workout_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
+        
+        request = workout_pb2.CreateWorkoutRequest(workout=workout)
+        response = workout_stub.CreateWorkout(request)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
         return response
     except grpc.RpcError as e:
-        ic(e)
+        handle_error(service)
         return e.details()
 
+@workout_controller.route('/workout', methods=['POST'])
+def post_workout():
+    future = executor.submit(post_workout_protected, request.get_json())
+
+    return future.result()
 
 def get_workout_protected(workout_id):
     cache_key = f"workout_{workout_id}"
@@ -166,10 +163,12 @@ def get_workout_protected(workout_id):
         return cache_value
 
     try:
-        stub = get_workout_stub()
+        service = get_min_load_service()
+        channel = grpc.insecure_channel(f'localhost:{service.port}')
+        workout_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
 
         request = workout_pb2.ReadWorkoutRequest(workout_id=workout_id)        
-        response = stub.ReadWorkout(request, timeout=6)
+        response = workout_stub.ReadWorkout(request, timeout=6)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
@@ -182,7 +181,7 @@ def get_workout_protected(workout_id):
 
         return response
     except grpc.RpcError as e:
-        ic(e)
+        handle_error()
         return e.details(), 500
 
 
@@ -201,10 +200,12 @@ def get_workouts_protected(user_id):
         return cache_value
 
     try:
-        stub = get_workout_stub()
-        ic(stub)
+        service = get_min_load_service()
+        channel = grpc.insecure_channel(f'localhost:{service.port}')
+        workout_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
+
         request = workout_pb2.ReadAllWorkoutsRequest(user_id=user_id)        
-        response = stub.ReadAllWorkouts(request)
+        response = workout_stub.ReadAllWorkouts(request)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
 
@@ -226,22 +227,26 @@ def get_workouts(user_id):
     return future.result()
 
 
-def put_workout_protected(workout_id):
+def put_workout_protected(data):
     
     ic(cache)
 
-    workout_data = request.get_json()
-    cleanup_cache(workout_data)
+    cleanup_cache(data)
 
     ic(cache)
 
-    workout = create_workout_object(workout_data)
+    workout = create_workout_object(data)
+    ic(workout)
     
     try:
-        stub = get_workout_stub()
+        service = get_min_load_service()
+        channel = grpc.insecure_channel(f'localhost:{service.port}')
+        workout_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
 
-        w_request = workout_pb2.UpdateWorkoutRequest(workout=workout)
-        response = stub.UpdateWorkout(w_request)
+        request = workout_pb2.UpdateWorkoutRequest(workout=workout)
+        response = workout_stub.UpdateWorkout(request, timeout=5)
+
+        ic(response)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
     
@@ -255,15 +260,14 @@ def put_workout_protected(workout_id):
 
 @workout_controller.route('/workout/<workout_id>', methods=['PUT'])
 def put_workout(workout_id):
-    future = executor.submit(put_workout_protected, workout_id)
+    future = executor.submit(put_workout_protected, request.get_json())
     return future.result()
 
 
-def delete_workout_protected(workout_id):
+def delete_workout_protected(workout_id, data):
     ic(cache)
 
-    workout_data = request.get_json()
-    user_id = workout_data['user_id']
+    user_id = data['user_id']
 
     keys = [f"workouts_user_{user_id}", f'workout_{workout_id}']
 
@@ -274,20 +278,23 @@ def delete_workout_protected(workout_id):
     ic(cache)
 
     try:
-        stub = get_workout_stub()
+        service = get_min_load_service()
+        channel = grpc.insecure_channel(f'localhost:{service.port}')
+        workout_stub = workout_pb2_grpc.WorkoutCrudStub(channel)
 
-        w_request = workout_pb2.DeleteWorkoutRequest(workout_id=workout_id)    
-        response = stub.DeleteWorkout(w_request, timeout=5)
+        request = workout_pb2.DeleteWorkoutRequest(workout_id=workout_id)    
+        response = workout_stub.DeleteWorkout(request, timeout=5)
 
         response = MessageToJson(response, preserving_proto_field_name=True)
         ic(response)
 
         return response
-    except grpc.RpcError as key:
-        ic(e)
-        return key.details()
+    except grpc.RpcError as e:
+        handle_error(service)
+        ic(service)
+        return e.details()
 
 @workout_controller.route('/workout/<workout_id>', methods=['DELETE'])
 def delete_workout(workout_id):
-    future = executor.submit(delete_workout_protected, workout_id)
+    future = executor.submit(delete_workout_protected, workout_id, request.get_json())
     return future.result()

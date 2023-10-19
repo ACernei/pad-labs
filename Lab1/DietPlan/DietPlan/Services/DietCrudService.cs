@@ -1,7 +1,7 @@
-using DietPlan.Data;
-using DietPlan.Mappers;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
+using DietPlan.Data;
+using DietPlan.Mappers;
 
 namespace DietPlan.Services;
 
@@ -21,6 +21,13 @@ public class DietCrudService : DietCrud.DietCrudBase
     public override async Task<CreateDietResponse> CreateDiet(CreateDietRequest request, ServerCallContext context)
     {
         var diet = Mapper.Map(request.Diet);
+        diet.Id = Guid.NewGuid().ToString();
+        diet.UserId = Guid.NewGuid().ToString();
+        foreach (var food in diet.Foods)
+        {
+            food.Id = Guid.NewGuid().ToString();
+        }
+
         this.context.Add(diet);
         await this.context.SaveChangesAsync();
         return new CreateDietResponse
@@ -32,6 +39,7 @@ public class DietCrudService : DietCrud.DietCrudBase
     public override async Task<ReadDietResponse> ReadDiet(ReadDietRequest request, ServerCallContext context)
     {
         var diet = this.context.Diets.Include(x => x.Foods).FirstOrDefault(x => x.Id == request.DietId);
+        await Task.Delay(1000);
         return new ReadDietResponse
         {
             Diet = Mapper.Map(diet),
@@ -62,14 +70,9 @@ public class DietCrudService : DietCrud.DietCrudBase
 
     public override async Task<DeleteDietResponse> DeleteDiet(DeleteDietRequest request, ServerCallContext context)
     {
-        var workout = this.context.Diets.Include(x => x.Foods).FirstOrDefault(x => x.Id == request.DietId);
+        var diet = this.context.Diets.Include(x => x.Foods).FirstOrDefault(x => x.Id == request.DietId);
 
-        this.context.Foods.RemoveRange(workout.Foods);
-        this.context.Remove(workout);
-
-        var diet = this.context.Diets.FirstOrDefault(x => x.Id == request.DietId);
-
-        // var diet = Mapper.Map(request.Diet);
+        this.context.Foods.RemoveRange(diet.Foods);
         this.context.Remove(diet);
         await this.context.SaveChangesAsync();
         return new DeleteDietResponse

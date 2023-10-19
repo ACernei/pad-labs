@@ -138,9 +138,9 @@ class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServi
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     registration_pb2_grpc.add_RegistrationServiceServicer_to_server(RegistrationServiceServicer(), server)
-    server.add_insecure_port('[::]:50053')
+    server.add_insecure_port('localhost:5001')
     server.start()
-    print("Registration server running at http://0.0.0.0:50053")
+    print("Registration server running at http://0.0.0.0:5001")
     server.wait_for_termination()
 
 
