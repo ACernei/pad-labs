@@ -2,6 +2,8 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=aspnetcore,dotnetcore,python,flask,venv,rider
 
 *.db
+*.db-shm
+*.db-wal
 *.pyi
 *_pb2*
 

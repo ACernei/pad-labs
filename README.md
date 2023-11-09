@@ -6,7 +6,10 @@ Download [compose.yaml](./Lab1/compose.yaml) file.
 
 Open in terminal the folder where the `compose.yaml` file is located.
 
-Run the following command:
+Run the following commands:
+
+ >docker compose pull
+
  >docker compose up
 
 ### Postman collection 

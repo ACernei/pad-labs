@@ -16,7 +16,7 @@ Real-world examples:
 
 ## Service Boundaries
 
-![workout app diagram](./resources/workout-app-diagram.png)
+![workout app diagram](./resources/workout-app-lab2.png)
 
 ## Choose Technology Stack and Communication Patterns
 ### Technology Stack:
