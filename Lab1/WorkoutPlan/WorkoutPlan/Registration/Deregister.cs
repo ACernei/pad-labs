@@ -29,7 +29,7 @@ public sealed class Deregister : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             //send heartbeat message
-            client.DeregisterService(new  DeregisterServiceRequest { Name = "WorkoutPlan", Host = "0.0.0.0", Port = port });
+            client.DeregisterService(new  DeregisterServiceRequest { Name = "WorkoutPlan", Host = "workout", Port = port });
             await Task.Delay(1000, stoppingToken);
         }
     }

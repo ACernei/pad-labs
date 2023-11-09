@@ -1,13 +1,11 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["DietPlan/DietPlan.csproj", "DietPlan/"]
+COPY ["DietPlan.csproj", "DietPlan/"]
 RUN dotnet restore "DietPlan/DietPlan.csproj"
-COPY . .
+COPY . "DietPlan/"
 WORKDIR "/src/DietPlan"
 RUN dotnet build "DietPlan.csproj" -c Release -o /app/build
 

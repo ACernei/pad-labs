@@ -4,28 +4,42 @@ services:
     image: acernei/gateway
     container_name: gateway
     environment:
-      - "SD_URL=http://service-discovery:5001"
+      - SD_URL=service-discovery:5001
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   service-discovery:
     image: acernei/service-discovery
     container_name: service-discovery
     ports:
-      - 8081:5001
+      - "5001:5001"
     depends_on:
       - gateway
 
-  workout1:
+  workout:
     image: acernei/workout
-    container_name: workout1
+    container_name: workout
     environment:
-      - "Kestrel__Endpoints__gRPC__Url=http://workout1:8082"
-      - "ServiceDiscoveryUrl=http://service-discovery:5001"
+      - Kestrel__Endpoints__gRPC__Url=http://workout:8081
+      - ServiceDiscoveryUrl=http://service-discovery:5001
+    expose:
+      - 8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      - gateway
+      - service-discovery
+
+  diet:
+    image: acernei/diet
+    container_name: diet
+    environment:
+      - Kestrel__Endpoints__gRPC__Url=http://diet:8082
+      - ServiceDiscoveryUrl=http://service-discovery:5001
     expose:
       - 8082
     ports:
-      - 8082:8082
+      - "8082:8082"
     depends_on:
       - gateway
       - service-discovery

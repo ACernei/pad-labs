@@ -1,3 +1,7 @@
+import os
+from os.path import join, dirname
+from dotenv import load_dotenv
+
 from icecream import ic
 import time
 import threading
@@ -7,6 +11,9 @@ import registration_pb2_grpc
 from google.protobuf import empty_pb2
 
 from concurrent import futures
+
+dotenv_path = join(dirname(__file__), '../.env')
+load_dotenv(dotenv_path)
 
 HEARTBEAT_TIMEOUT = 6000
 CRITICAL_LOAD_THRESHOLD = 60
@@ -95,7 +102,7 @@ def check_service_status():
 # Service function for registration
 class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServicer):
     def RegisterService(self, request, context):
-        ic(request)
+        ic(request.host)
         registration_info = request
         register(registration_info.name, registration_info.host, registration_info.port)
         print(f"Received registration: Name: {registration_info.name}, Host: {registration_info.host}, Port: {registration_info.port}")
@@ -111,7 +118,7 @@ class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServi
 
     # Service function for heartbeat updates
     def UpdateServiceHeartbeat(self, request, context):
-        ic(request)
+        # ic(request)
         update_load(request.service_name, request.port, request.load)
         check_critical_load(request.service_name, request.port)
 
@@ -138,7 +145,7 @@ class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServi
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     registration_pb2_grpc.add_RegistrationServiceServicer_to_server(RegistrationServiceServicer(), server)
-    server.add_insecure_port('localhost:5001')
+    server.add_insecure_port('service-discovery:5001')
     server.start()
     print("Registration server running at http://0.0.0.0:5001")
     server.wait_for_termination()

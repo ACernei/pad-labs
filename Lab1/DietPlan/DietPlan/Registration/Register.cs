@@ -29,7 +29,7 @@ public sealed class Register : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             //send heartbeat message
-            client.RegisterService(new ServiceRegistration { Name = "DietPlan", Host = "0.0.0.0", Port = port });
+            client.RegisterService(new ServiceRegistration { Name = "DietPlan", Host = "diet", Port = port });
             await Task.Delay(1000, stoppingToken);
         }
     }

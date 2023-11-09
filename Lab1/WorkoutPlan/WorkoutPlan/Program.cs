@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using WorkoutPlan;
 using WorkoutPlan.Data;
 using WorkoutPlan.Interceptors;
 using WorkoutPlan.Registration;

@@ -1,0 +1,236 @@
+{
+	"info": {
+		"_postman_id": "79b69d65-4d4e-4ede-8b6c-0e917732a5e8",
+		"name": "PAD",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30830851"
+	},
+	"item": [
+		{
+			"name": "GatewayWorkout",
+			"item": [
+				{
+					"name": "GetWorkoutById",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/workout/808d42fb-0ccb-4461-8370-5d1fe69c4eb4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"workout",
+								"808d42fb-0ccb-4461-8370-5d1fe69c4eb4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PostWorkout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workout\": {\n    \"id\": \"808d42fb-0ccb-4461-8370-5d1fe69c4eb4\",\n    \"user_id\": \"032d9965-8c3e-4752-9968-3237c04df45e\",\n    \"name\": \"non\",\n    \"description\": \"irure esse\",\n    \"exercises\": [\n      {\n        \"id\": \"647a5c76-26d0-4324-ad23-e8e4fe128c18\",\n        \"name\": \"et est reprehenderit\",\n        \"description\": \"Duis\",\n        \"sets\": 929914686,\n        \"repetitions\": 2045985197\n      },\n      {\n        \"id\": \"a4514be2-da09-447b-a6d3-478fdea2cdd7\",\n        \"name\": \"ipsum occaecat ad est\",\n        \"description\": \"ea adipisicing in\",\n        \"sets\": 1587341673,\n        \"repetitions\": 2037418337\n      },\n      {\n        \"id\": \"e20e8a20-3b6d-4633-81ac-82f646350d85\",\n        \"name\": \"quis in sit\",\n        \"description\": \"culpa incididunt\",\n        \"sets\": -573067069,\n        \"repetitions\": 1568145375\n      }\n    ]\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/workout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"workout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetWorkoutStatus",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/workout_status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"workout_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetUserWorkouts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080//workouts/032d9965-8c3e-4752-9968-3237c04df45e",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"",
+								"workouts",
+								"032d9965-8c3e-4752-9968-3237c04df45e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DeleteWorkoutById",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/workout/808d42fb-0ccb-4461-8370-5d1fe69c4eb4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"workout",
+								"808d42fb-0ccb-4461-8370-5d1fe69c4eb4"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "GatewayDiet",
+			"item": [
+				{
+					"name": "GetDietById",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/diet/03812e32-96e0-49bf-bd23-566fe878f5eb",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"diet",
+								"03812e32-96e0-49bf-bd23-566fe878f5eb"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PostDiet",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"diet\": {\n    \"id\": \"03812e32-96e0-49bf-bd23-566fe878f5eb\",\n    \"user_id\": \"69438140-48dd-4045-a57a-904164081af6\",\n    \"name\": \"velit minim enim fugiat\",\n    \"description\": \"anim deserunt veniam sit\",\n    \"foods\": [\n      {\n        \"id\": \"2c1ab72d-5b86-4948-9ce9-274143dc1882\",\n        \"name\": \"Duis sint cillum nulla est\",\n        \"description\": \"qui sit\",\n        \"calories\": -557129837,\n        \"repetitions\": 1315940835\n      },\n      {\n        \"id\": \"a0640ff6-4bac-4b87-9dbc-8bae03834176\",\n        \"name\": \"proident\",\n        \"description\": \"mollit laboris\",\n        \"calories\": 1814847061,\n        \"repetitions\": 940350816\n      },\n      {\n        \"id\": \"a468bbf6-a4d2-4006-9058-53fbf118c5d3\",\n        \"name\": \"commodo deserunt\",\n        \"description\": \"aliqua\",\n        \"calories\": 526964271,\n        \"repetitions\": -1063170068\n      },\n      {\n        \"id\": \"c0d32c5d-ce83-43be-a028-d2baf6f96959\",\n        \"name\": \"ut dolore et minim\",\n        \"description\": \"non culpa\",\n        \"calories\": -559743578,\n        \"repetitions\": -1333225588\n      }\n    ]\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/diet",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"diet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetDietStatus",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/diet_status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"diet_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetUserDiets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080//diets/69438140-48dd-4045-a57a-904164081af6",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"",
+								"diets",
+								"69438140-48dd-4045-a57a-904164081af6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DeleteDietById",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/diet/03812e32-96e0-49bf-bd23-566fe878f5eb",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"diet",
+								"03812e32-96e0-49bf-bd23-566fe878f5eb"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -36,9 +36,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    // var context = services.AddDbContext<ApplicationDbContext>(options =>
-    //         options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-   var context = services.GetRequiredService<DietContext>();
+    var context = services.GetRequiredService<DietContext>();
     context.Database.Migrate();
 }
 
