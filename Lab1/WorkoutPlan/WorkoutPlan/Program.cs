@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 using WorkoutPlan.Data;
 using WorkoutPlan.Interceptors;
 using WorkoutPlan.Registration;
@@ -7,10 +8,7 @@ using RegistrationService = Registration.RegistrationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddGrpc(options =>
-{
-    options.Interceptors.Add<LoadInterceptor>();
-});
+builder.Services.AddGrpc(options => { options.Interceptors.Add<LoadInterceptor>(); });
 builder.Services
     .AddGrpcClient<RegistrationService.RegistrationServiceClient>(o =>
     {
@@ -19,13 +17,20 @@ builder.Services
     .ConfigurePrimaryHttpMessageHandler(() =>
     {
         var handler = new HttpClientHandler();
-        handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+        handler.ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
         return handler;
     });
 
 builder.Services.AddHostedService<Register>();
 builder.Services.AddHostedService<HeartBeater>();
 builder.Services.AddSingleton<LoadCounter>();
+
+builder.Services.AddMetricServer(options =>
+{
+    options.Port = 8888;
+    options.Hostname = "*";
+});
 
 builder.Services.AddDbContext<WorkoutContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("WorkoutContext")));
@@ -40,8 +45,13 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
+app.UseRouting();
+app.UseGrpcMetrics();
+
 app.MapGrpcService<WorkoutCrudService>();
 app.MapGrpcService<StatusService>();
+
+app.MapMetrics();
 
 app.MapGet("/",
     () =>

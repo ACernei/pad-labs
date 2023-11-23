@@ -25,11 +25,12 @@ public sealed class Register : BackgroundService
             .GetSection("gRPC")
             .GetValue<string>("Url");
         var uri = new Uri(url);
+        var host = uri.GetComponents(UriComponents.Host, UriFormat.Unescaped);
         var port = int.Parse(uri.GetComponents(UriComponents.Port, UriFormat.Unescaped));
         while (!stoppingToken.IsCancellationRequested)
         {
             //send heartbeat message
-            client.RegisterService(new ServiceRegistration { Name = "WorkoutPlan", Host = "workout", Port = port });
+            client.RegisterService(new ServiceRegistration { Name = "WorkoutPlan", Host = host, Port = port });
             await Task.Delay(1000, stoppingToken);
         }
     }

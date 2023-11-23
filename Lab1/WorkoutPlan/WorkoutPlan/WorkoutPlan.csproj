@@ -19,6 +19,7 @@
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.11" />
+        <PackageReference Include="prometheus-net.AspNetCore.Grpc" Version="8.1.0" />
     </ItemGroup>
 
     <ItemGroup>
