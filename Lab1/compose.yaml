@@ -1,45 +1,99 @@
 ---
 services:
+  memcached1:
+    networks:
+      - mynetwork
+    image: bitnami/memcached:latest
+    container_name: memcached1
+
+    hostname: memcached1
+  
+  memcached2:
+    networks:
+      - mynetwork
+    image: bitnami/memcached:latest
+    container_name: memcached2
+    hostname: memcached2
+  
+  memcached3:
+    networks:
+      - mynetwork
+    image: bitnami/memcached:latest
+    hostname: memcached3
+  
   gateway:
-    image: acernei/gateway
+    build: ./gateway
     container_name: gateway
+    hostname: gateway
     environment:
       - SD_URL=service-discovery:5001
+      - WORKOUT_HOST=workout
+      - DIET_HOST=diet
     ports:
-      - "8080:8080"
+      - 8080:8080
+    networks:
+      - mynetwork
 
   service-discovery:
-    image: acernei/service-discovery
+    build: ./service_discovery
     container_name: service-discovery
-    ports:
-      - "5001:5001"
+    hostname: service_discovery
+    environment:
+      - SD_URL=service-discovery:5001
     depends_on:
       - gateway
+    networks:
+      - mynetwork
 
   workout:
-    image: acernei/workout
+    build: ./WorkoutPlan/WorkoutPlan
     container_name: workout
+    hostname: workout
     environment:
       - Kestrel__Endpoints__gRPC__Url=http://workout:8081
       - ServiceDiscoveryUrl=http://service-discovery:5001
     expose:
-      - 8081
+      - 8888
     ports:
-      - "8081:8081"
+      - 8888:8888
     depends_on:
       - gateway
       - service-discovery
+    networks:
+      - mynetwork
 
   diet:
-    image: acernei/diet
+    build: ./DietPlan/DietPlan
     container_name: diet
+    hostname: diet
     environment:
       - Kestrel__Endpoints__gRPC__Url=http://diet:8082
       - ServiceDiscoveryUrl=http://service-discovery:5001
-    expose:
-      - 8082
-    ports:
-      - "8082:8082"
     depends_on:
       - gateway
       - service-discovery
+    networks:
+      - mynetwork
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    hostname: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - mynetwork
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:

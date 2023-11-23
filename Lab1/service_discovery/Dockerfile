@@ -14,5 +14,5 @@ RUN pip install -r requirements.txt
 # Expose the port your service will run on
 EXPOSE 5001
 
-# Run your Python script
+# Define the command to run your application
 CMD ["python", "main.py"]

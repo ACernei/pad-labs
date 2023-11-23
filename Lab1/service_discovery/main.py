@@ -12,8 +12,10 @@ from google.protobuf import empty_pb2
 
 from concurrent import futures
 
-dotenv_path = join(dirname(__file__), '../.env')
+dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
+
+SD_URL = os.environ.get("SD_URL")
 
 HEARTBEAT_TIMEOUT = 6000
 CRITICAL_LOAD_THRESHOLD = 60
@@ -145,9 +147,9 @@ class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServi
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     registration_pb2_grpc.add_RegistrationServiceServicer_to_server(RegistrationServiceServicer(), server)
-    server.add_insecure_port('service-discovery:5001')
+    server.add_insecure_port(SD_URL)
     server.start()
-    print("Registration server running at http://0.0.0.0:5001")
+    print(f'Registration server running at {SD_URL}')
     server.wait_for_termination()
 
 

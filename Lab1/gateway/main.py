@@ -1,12 +1,7 @@
 from icecream import ic
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 import concurrent.futures
-
-import grpc
-from google.protobuf.json_format import MessageToJson
-import workout_pb2_grpc
-import workout_pb2
 
 from controllers.workout_controller import workout_controller
 from controllers.diet_controller import diet_controller
@@ -22,7 +17,7 @@ executor = concurrent.futures.ThreadPoolExecutor(MAX_CONCURRENT_TASKS)
 
 @app.route('/gateway_status', methods=['GET'])
 def get_gateway_status():
-    return jsonify({"status": "Gateway is up and running"})
+    return jsonify({'status': 'Gateway is up and running'})
 
     
 if __name__ == '__main__':

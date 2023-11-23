@@ -7,10 +7,7 @@ using RegistrationService = Registration.RegistrationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddGrpc(options =>
-{
-    options.Interceptors.Add<LoadInterceptor>();
-});
+builder.Services.AddGrpc(options => { options.Interceptors.Add<LoadInterceptor>(); });
 builder.Services
     .AddGrpcClient<RegistrationService.RegistrationServiceClient>(o =>
     {
@@ -19,7 +16,8 @@ builder.Services
     .ConfigurePrimaryHttpMessageHandler(() =>
     {
         var handler = new HttpClientHandler();
-        handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+        handler.ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
         return handler;
     });
 
