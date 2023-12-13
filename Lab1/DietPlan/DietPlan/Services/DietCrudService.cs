@@ -22,7 +22,7 @@ public class DietCrudService : DietCrud.DietCrudBase
     {
         var diet = Mapper.Map(request.Diet);
         diet.Id = Guid.NewGuid().ToString();
-        diet.UserId = Guid.NewGuid().ToString();
+        // diet.UserId = Guid.NewGuid().ToString();
         foreach (var food in diet.Foods)
         {
             food.Id = Guid.NewGuid().ToString();
@@ -78,6 +78,58 @@ public class DietCrudService : DietCrud.DietCrudBase
         return new DeleteDietResponse
         {
             Message = "Diet deleted successfully"
+        };
+    }
+
+    public override async Task<ValidationResponse> ValidateTransaction(ValidationRequest request, ServerCallContext context)
+    {
+        await this.context.Database.BeginTransactionAsync();
+        try
+        {
+            var Diet = Mapper.Map(request.Diet);
+            Diet.Id = Guid.NewGuid().ToString();
+            Diet.UserId = Guid.NewGuid().ToString();
+            foreach (var food in Diet.Foods)
+            {
+                food.Id = Guid.NewGuid().ToString();
+            }
+
+            this.context.Add(Diet);
+            Console.WriteLine("Diet Transaction is valid");
+            await this.context.SaveChangesAsync();
+
+            return new()
+            {
+                IsValid = true
+            };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Console.WriteLine("Diet Transaction is not valid");
+
+            await this.context.Database.RollbackTransactionAsync();
+            return new()
+            {
+                IsValid = false
+            };
+        }
+    }
+
+    public override async Task<CommitResponse> CommitTransaction(Transaction request, ServerCallContext context)
+    {
+        // await this.context.Database.CommitTransactionAsync();
+        return new CommitResponse
+        {
+            IsCommitted = true
+        };
+    }
+    public override async Task<RollbackResponse> RollbackTransaction(Transaction request, ServerCallContext context)
+    {
+        // await this.context.Database.RollbackTransactionAsync();
+        return new RollbackResponse
+        {
+            IsRolledBack = true
         };
     }
 }

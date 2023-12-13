@@ -27,7 +27,7 @@ service_load = {}
 
 # Function to register a service
 def register(name, host, port):
-    service_key = f"{name}:{port}"
+    service_key = f"{name}:{host}"
     if service_key not in deleted_services:
         registered_services[service_key] = {'host': host, 'port': port}
         print(f"Service {service_key} registered in the gateway")
@@ -40,35 +40,35 @@ def deregister(service_key):
     print(f"Service {service_key} deregistered from the gateway")
 
 # Function to re-register a deleted service upon receiving a heartbeat
-def re_register(service_name, port):
-    service_key = f"{service_name}:{port}"
+def re_register(service_name, host):
+    service_key = f"{service_name}:{host}"
     if service_key in deleted_services:
         registered_services[service_key] = deleted_services[service_key]
         del deleted_services[service_key]
         print(f"Service {service_key} re-registered due to received heartbeat")
 
 # Function to update service load
-def update_load(service_name, port, load):
-    service_key = f"{service_name}:{port}"
+def update_load(service_name, host, load):
+    service_key = f"{service_name}:{host}"
     if service_key not in service_load:
         service_load[service_key] = 0
     service_load[service_key] = load
-    print(f"Service {service_key} load updated: {load}")
+    # print(f"Service {service_key} load updated: {load}")
 
 # Function to check and raise an alert for critical load
-def check_critical_load(service_name, port):
-    service_key = f"{service_name}:{port}"
+def check_critical_load(service_name, host):
+    service_key = f"{service_name}:{host}"
     if service_key in service_load and service_load[service_key] > CRITICAL_LOAD_THRESHOLD:
         print(f"Critical load alert: Service {service_key} is overloaded! Load: {service_load[service_key]}")
 
 # Function to update service heartbeat
-def update_heartbeat(service_name, port):
-    service_key = f"{service_name}:{port}"
+def update_heartbeat(service_name, host):
+    service_key = f"{service_name}:{host}"
     if service_key not in service_heartbeats:
         service_heartbeats[service_key] = {}
     service_heartbeats[service_key] = time.time()
-    print(service_heartbeats)
-    print(f"Heartbeat received for service {service_key}")
+    # print(service_heartbeats)
+    # print(f"Heartbeat received for service {service_key}")
 
 # Function to calculate the time since the last heartbeat for a service
 def get_time_since_last_heartbeat(service_key):
@@ -84,7 +84,7 @@ def get_time_since_last_heartbeat(service_key):
 def is_service_active(service_key):
     time_since_last_heartbeat = get_time_since_last_heartbeat(service_key)
     if time_since_last_heartbeat is not None and time_since_last_heartbeat <= HEARTBEAT_TIMEOUT:
-        print(f"Time since last heartbeat for service {service_key}: {time_since_last_heartbeat}ms")
+        # print(f"Time since last heartbeat for service {service_key}: {time_since_last_heartbeat}ms")
         return True
     else:
         print(f"Service {service_key} has not sent a heartbeat.")
@@ -104,7 +104,7 @@ def check_service_status():
 # Service function for registration
 class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServicer):
     def RegisterService(self, request, context):
-        ic(request.host)
+        # ic(request.host)
         registration_info = request
         register(registration_info.name, registration_info.host, registration_info.port)
         print(f"Received registration: Name: {registration_info.name}, Host: {registration_info.host}, Port: {registration_info.port}")
@@ -113,7 +113,7 @@ class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServi
     # Service function for de-registration
     def DeregisterService(self, request, context):
         deregistration_info = request
-        service_key = f"{deregistration_info.service_name}:{deregistration_info.port}"
+        service_key = f"{deregistration_info.service_name}:{deregistration_info.host}"
         deregister(service_key)
         print(f"Received de-registration: Name: {deregistration_info.service_name}, Host: {deregistration_info.host}, Port: {deregistration_info.port}")
         return empty_pb2.Empty()
@@ -121,25 +121,26 @@ class RegistrationServiceServicer(registration_pb2_grpc.RegistrationServiceServi
     # Service function for heartbeat updates
     def UpdateServiceHeartbeat(self, request, context):
         # ic(request)
-        update_load(request.service_name, request.port, request.load)
-        check_critical_load(request.service_name, request.port)
+        update_load(request.service_name, request.host, request.load)
+        check_critical_load(request.service_name, request.host)
 
-        update_heartbeat(request.service_name, request.port)
-        re_register(request.service_name, request.port)
+        update_heartbeat(request.service_name, request.host)
+        re_register(request.service_name, request.host)
         return empty_pb2.Empty()
 
     # Service function to send the list of registered services
     def ListRegisteredServices(self, request, context):
         services_list = []
         for service_key, info in registered_services.items():
-            name, port = service_key.split(':')
+            name = service_key.split(':')[0]
             load = service_load.get(service_key, 0)
             services_list.append(registration_pb2.ServiceInfo(
                 name=name,
                 host=info['host'],
-                port=int(port),
+                port=int(info['port']),
                 load=load
             ))
+        # ic(services_list)
         response = registration_pb2.ServicesList(services=services_list)
         return response
 

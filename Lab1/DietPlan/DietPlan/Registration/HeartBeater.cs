@@ -32,11 +32,11 @@ public sealed class HeartBeater : BackgroundService
             .GetSection("gRPC")
             .GetValue<string>("Url");
         var uri = new Uri(url);
-        var port = int.Parse(uri.GetComponents(UriComponents.Port, UriFormat.Unescaped));
+        var host = uri.GetComponents(UriComponents.Host, UriFormat.Unescaped);
         while (!stoppingToken.IsCancellationRequested)
         {
             //send heartbeat message
-            client.UpdateServiceHeartbeat(new Heartbeat { ServiceName = "DietPlan", Port = port, Load = this.counter.GetLoad()});
+            client.UpdateServiceHeartbeat(new Heartbeat { ServiceName = "DietPlan", Host = host, Load = this.counter.GetLoad()});
             await Task.Delay(1000, stoppingToken);
         }
     }

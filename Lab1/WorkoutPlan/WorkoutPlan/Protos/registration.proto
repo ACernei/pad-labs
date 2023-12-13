@@ -18,7 +18,7 @@ message DeregisterServiceRequest {
 
 message Heartbeat {
   string service_name = 1;
-  int32 port = 2;
+  string host = 2;
   int32 load = 3;
 }
 

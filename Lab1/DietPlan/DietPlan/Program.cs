@@ -3,6 +3,7 @@ using DietPlan.Interceptors;
 using DietPlan.Registration;
 using DietPlan.Services;
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 using RegistrationService = Registration.RegistrationService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,12 @@ builder.Services.AddHostedService<Register>();
 builder.Services.AddHostedService<HeartBeater>();
 builder.Services.AddSingleton<LoadCounter>();
 
+builder.Services.AddMetricServer(options =>
+{
+    options.Port = 8888;
+    options.Hostname = "*";
+});
+
 builder.Services.AddDbContext<DietContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DietContext")));
 
@@ -38,8 +45,13 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
+app.UseRouting();
+app.UseGrpcMetrics();
+
 app.MapGrpcService<DietCrudService>();
 app.MapGrpcService<StatusService>();
+
+app.MapMetrics();
 
 app.MapGet("/",
     () =>

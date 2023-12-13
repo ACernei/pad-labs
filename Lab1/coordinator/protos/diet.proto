@@ -36,7 +36,7 @@ service DietCrud {
     rpc ReadAllDiets (ReadAllDietsRequest) returns (ReadAllDietsResponse);
     rpc UpdateDiet (UpdateDietRequest) returns (UpdateDietResponse);
     rpc DeleteDiet (DeleteDietRequest) returns (DeleteDietResponse);
-
+    
     rpc ValidateTransaction(ValidationRequest) returns (ValidationResponse);
     rpc RollbackTransaction(Transaction) returns (RollbackResponse);
     rpc CommitTransaction(Transaction) returns (CommitResponse);

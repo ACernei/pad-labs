@@ -19,16 +19,30 @@ services:
     networks:
       - mynetwork
     image: bitnami/memcached:latest
+    container_name: memcached3
     hostname: memcached3
   
+  coordinator:
+    build: ./coordinator
+    container_name: coordinator
+    hostname: coordinator
+    environment:
+      - PORT=8080
+      - HOST=coordinator
+    ports:
+      - 6000:8080
+    networks:
+      - mynetwork
+
   gateway:
     build: ./gateway
     container_name: gateway
     hostname: gateway
     environment:
       - SD_URL=service-discovery:5001
-      - WORKOUT_HOST=workout
-      - DIET_HOST=diet
+      # - WORKOUT_HOST=workout
+      # - DIET_HOST=diet
+      - COORDINATOR_URL=coordinator:8080
     ports:
       - 8080:8080
     networks:
@@ -45,29 +59,63 @@ services:
     networks:
       - mynetwork
 
-  workout:
+  workout0:
     build: ./WorkoutPlan/WorkoutPlan
-    container_name: workout
-    hostname: workout
+    container_name: workout0
+    hostname: workout0
     environment:
-      - Kestrel__Endpoints__gRPC__Url=http://workout:8081
+      - Kestrel__Endpoints__gRPC__Url=http://workout0:8081
       - ServiceDiscoveryUrl=http://service-discovery:5001
     expose:
       - 8888
     ports:
-      - 8888:8888
+      - 8081:8888
     depends_on:
       - gateway
       - service-discovery
     networks:
       - mynetwork
 
-  diet:
+  # workout1:
+  #   build: ./WorkoutPlan/WorkoutPlan
+  #   container_name: workout1
+  #   hostname: workout1
+  #   environment:
+  #     - Kestrel__Endpoints__gRPC__Url=http://workout1:8081
+  #     - ServiceDiscoveryUrl=http://service-discovery:5001
+  #   # expose:
+  #   #   - 8888
+  #   # ports:
+  #   #   - 8888:8888
+  #   depends_on:
+  #     - gateway
+  #     - service-discovery
+  #   networks:
+  #     - mynetwork
+
+  # workout2:
+  #   build: ./WorkoutPlan/WorkoutPlan
+  #   container_name: workout2
+  #   hostname: workout2
+  #   environment:
+  #     - Kestrel__Endpoints__gRPC__Url=http://workout2:8081
+  #     - ServiceDiscoveryUrl=http://service-discovery:5001
+  #   # expose:
+  #   #   - 8888
+  #   # ports:
+  #   #   - 8888:8888
+  #   depends_on:
+  #     - gateway
+  #     - service-discovery
+  #   networks:
+  #     - mynetwork
+
+  diet0:
     build: ./DietPlan/DietPlan
-    container_name: diet
-    hostname: diet
+    container_name: diet0
+    hostname: diet0
     environment:
-      - Kestrel__Endpoints__gRPC__Url=http://diet:8082
+      - Kestrel__Endpoints__gRPC__Url=http://diet0:8091
       - ServiceDiscoveryUrl=http://service-discovery:5001
     depends_on:
       - gateway

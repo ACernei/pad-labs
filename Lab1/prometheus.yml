@@ -6,8 +6,8 @@ scrape_configs:
   - job_name: 'workout'
     static_configs:
       - targets: 
-        - workout:8888
+        - workout0:8888
   - job_name: 'diet'
     static_configs:
       - targets: 
-        - diet:8082
+        - diet0:8888

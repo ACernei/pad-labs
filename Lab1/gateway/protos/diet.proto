@@ -72,3 +72,25 @@ message DeleteDietRequest {
 message DeleteDietResponse {
     string message = 1;
 }
+
+
+message ValidationRequest{
+    string transaction_id = 1;
+    Diet diet = 2;
+}
+
+message ValidationResponse{
+    bool is_valid = 1;
+}
+
+message Transaction{
+    string transaction_id = 1;
+}
+
+message RollbackResponse{
+    bool is_rolled_back = 1;
+}
+
+message CommitResponse{
+    bool is_committed = 1;
+}

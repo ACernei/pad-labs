@@ -36,6 +36,10 @@ service WorkoutCrud {
     rpc ReadAllWorkouts (ReadAllWorkoutsRequest) returns (ReadAllWorkoutsResponse);
     rpc UpdateWorkout (UpdateWorkoutRequest) returns (UpdateWorkoutResponse);
     rpc DeleteWorkout (DeleteWorkoutRequest) returns (DeleteWorkoutResponse);
+
+    rpc ValidateTransaction(ValidationRequest) returns (ValidationResponse);
+    rpc RollbackTransaction(Transaction) returns (RollbackResponse);
+    rpc CommitTransaction(Transaction) returns (CommitResponse);
 }
 
 message CreateWorkoutRequest {
@@ -72,4 +76,26 @@ message DeleteWorkoutRequest {
 }
 message DeleteWorkoutResponse {
     string message = 1;
+}
+
+
+message ValidationRequest{
+    string transaction_id = 1;
+    Workout workout = 2;
+}
+
+message ValidationResponse{
+    bool is_valid = 1;
+}
+
+message Transaction{
+    string transaction_id = 1;
+}
+
+message RollbackResponse{
+    bool is_rolled_back = 1;
+}
+
+message CommitResponse{
+    bool is_committed = 1;
 }
